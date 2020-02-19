@@ -67,9 +67,9 @@ async function run() {
 
     const start = new Date();
 
-    let prevUUID      = '00000000-0000-0000-0000-000000000000',
-        chunksCounter = 0,
-        rowsCounter   = 0;
+    let prevLastIdInChunk = 0,
+        chunksCounter     = 0,
+        rowsCounter       = 0;
 
     const outputFile     = `data/entities-${REALM}-${ENTITY}-${new Date().toISOString()}.json.gz`,
           tempOutputFile = `${outputFile}.part`;
@@ -82,7 +82,7 @@ async function run() {
     gzipStream.write(JSON.stringify({type: 'header', exportStart: new Date()}) + '\n');
 
     await async.doUntil(async () => {
-            params.minUUID = prevUUID;
+            params.minUUID = prevLastIdInChunk;
 
             let chunkStartTime = new Date();
             let records = await getChunk(params);
@@ -90,9 +90,9 @@ async function run() {
             chunksCounter++;
             rowsCounter += records.length;
 
-            const lastUUID = records.length ? records[records.length - 1].uuid : null;
+            const lastIdInChunk = records.length ? records[records.length - 1].id : null;
 
-            if (lastUUID) {
+            if (lastIdInChunk) {
                 const speedEntPerSec = rowsCounter / (new Date() - start) * 1000;
                 console.log(`fetched chunk ${chunksCounter} of ${records.length} entities in ${(new Date() - chunkStartTime) / 1000}s, ` +
                     `${rowsCounter} entities so far, ${profilesCountToBeFetched - rowsCounter} to be fetched (${Math.floor(speedEntPerSec)}/s, estimated time left: ${Math.round(profilesCountToBeFetched / speedEntPerSec)}s)`);
@@ -106,7 +106,7 @@ async function run() {
                 gzipStream.write(records.map(record => JSON.stringify(record)).join('\n') + '\n');
             }
 
-            prevUUID = lastUUID;
+            prevLastIdInChunk = lastIdInChunk;
 
             return records.length < params.pageSize;
         }, async (stop) => stop

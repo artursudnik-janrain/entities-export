@@ -24,7 +24,7 @@ end note
 if (number of records > 0 ) then (yes)
     :create temporary file;
 
-    :lastUUID = '00000000-0000-0000-0000-000000000000';
+    :lastId = 0;
 
     :save header row to the temporary file;
     note right
@@ -32,17 +32,17 @@ if (number of records > 0 ) then (yes)
     end note
 
     repeat
-        :set uuid>=lastUUID in the filtering;
+        :set id>=lastId in the filtering;
         note right
             as a part of the filtering already set
         end note
-        :fetch chunk of records with filtering, sorted on uuid incrementally;
+        :fetch chunk of records with filtering, sorted on id incrementally;
         note right
             /entity.find
         end note
 
         :append records to the temporary file;
-        :set lastUUID to uuid field value of the last record in the chunk;
+        :set lastId to id field value of the last record in the chunk;
         note right
             this is why chunk records have to be sorted
         end note
