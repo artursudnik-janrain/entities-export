@@ -71,13 +71,15 @@ async function run() {
         chunksCounter = 0,
         rowsCounter   = 0;
 
-    const outputFile     = `data/results-${new Date().toISOString()}.json.gz`,
+    const outputFile     = `data/entities-${REALM}-${ENTITY}-${new Date().toISOString()}.json.gz`,
           tempOutputFile = `${outputFile}.part`;
 
     const resultsFileStream = fs.createWriteStream(tempOutputFile),
           gzipStream        = createGzip();
 
     gzipStream.pipe(resultsFileStream);
+
+    gzipStream.write(JSON.stringify({type: 'header', exportStart: new Date()}) + '\n');
 
     await async.doUntil(async () => {
             params.minUUID = prevUUID;
@@ -98,6 +100,8 @@ async function run() {
                 console.log(`fetched chunk with no entities in ${(new Date() - chunkStartTime) / 1000}s, ${rowsCounter} entities so far, no more entities to fetch`);
             }
 
+            records = records.map(record => ({type: 'data', data: record}));
+
             if (records.length > 0) {
                 gzipStream.write(records.map(record => JSON.stringify(record)).join('\n') + '\n');
             }
@@ -107,6 +111,8 @@ async function run() {
             return records.length < params.pageSize;
         }, async (stop) => stop
     );
+
+    gzipStream.write(JSON.stringify({type: 'footer', exportEnd: new Date()}));
 
     gzipStream.end();
 
