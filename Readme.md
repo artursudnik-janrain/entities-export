@@ -37,7 +37,7 @@ or
 
 During execution, script produces console output with some details. 
 
-When executed for the first time output:
+When executed for the first time:
 ```text
 this is the first export run for jenmcapture.us-dev, DCS_840
 checking total entities count
@@ -58,9 +58,9 @@ no entities to be fetched
 Results are saved in data folder that is created if does not exist. Results files are compressed and versioned with
 execution time included in filename. For example:
 ```text
--rw-r--r--   1 jsudnikh  staff  86243923 Feb 17 19:13 results-2020-02-17T17:45:49.808Z.json.gz
--rw-r--r--   1 jsudnikh  staff     25055 Feb 18 14:29 results-2020-02-18T13:29:41.673Z.json.gz
--rw-r--r--   1 jsudnikh  staff     25055 Feb 18 14:30 results-2020-02-18T13:30:05.866Z.json.gz
+-rw-r--r--   1 jsudnikh  staff  86243923 Feb 17 19:13 entities-jencapture.us.dev-DCS_840-2020-02-17T17:45:49.808Z.json.gz
+-rw-r--r--   1 jsudnikh  staff     25055 Feb 18 14:29 entities-jencapture.us.dev-DCS_840-2020-02-18T13:29:41.673Z.json.gz
+-rw-r--r--   1 jsudnikh  staff     25055 Feb 18 14:30 entities-jencapture.us.dev-DCS_840-2020-02-18T13:30:05.866Z.json.gz
 
 ```
 
