@@ -1,6 +1,6 @@
 {
   "name": "entities-export",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "dependencies": {
     "async": "3.1.1",
     "axios": "0.19.2",
