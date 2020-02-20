@@ -95,7 +95,7 @@ async function run() {
             if (lastIdInChunk) {
                 const speedEntPerSec = rowsCounter / (new Date() - start) * 1000;
                 console.log(`fetched chunk ${chunksCounter} of ${records.length} entities in ${(new Date() - chunkStartTime) / 1000}s, ` +
-                    `${rowsCounter} entities so far, ${profilesCountToBeFetched - rowsCounter} to be fetched (${Math.floor(speedEntPerSec)}/s, estimated time left: ${Math.round(profilesCountToBeFetched / speedEntPerSec)}s)`);
+                    `${rowsCounter} entities so far, ${profilesCountToBeFetched - rowsCounter} to be fetched (${Math.floor(speedEntPerSec)}/s, estimated time left: ${Math.round((profilesCountToBeFetched - rowsCounter) / speedEntPerSec)}s)`);
             } else {
                 console.log(`fetched chunk with no entities in ${(new Date() - chunkStartTime) / 1000}s, ${rowsCounter} entities so far, no more entities to fetch`);
             }
