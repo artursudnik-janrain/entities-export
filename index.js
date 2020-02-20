@@ -82,7 +82,7 @@ async function run() {
     gzipStream.write(JSON.stringify({type: 'header', exportStart: new Date()}) + '\n');
 
     await async.doUntil(async () => {
-            params.minUUID = prevLastIdInChunk;
+            params.minId = prevLastIdInChunk;
 
             let chunkStartTime = new Date();
             let records = await getChunk(params);
