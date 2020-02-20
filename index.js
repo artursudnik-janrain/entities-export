@@ -30,20 +30,24 @@ async function run() {
 
     const state = await getState();
 
-    if (state.lastExport) {
-        console.log(`previous export run: ${state.lastExport}`);
-        console.log(`checking entities count modified since ${state.lastExport}`);
+    let deltaExport;
+
+    if (state.lastExport && state.lastExport.start) {
+        console.log(`previous export run: ${state.lastExport.start}`);
+        console.log(`checking entities count modified since ${state.lastExport.start}`);
+        deltaExport = true;
     } else {
         console.log(`this is the first export run for ${process.env.REALM}, ${process.env.ENTITY}`);
         console.log(`checking total entities count`);
+        deltaExport = false;
     }
 
     const profilesCountToBeFetched = await getCount({
-        realm:          REALM,
-        entity:         ENTITY,
-        clientId:       CLIENT_ID,
-        clientSecret:   CLIENT_SECRET,
-        minLastUpdated: state.lastExport ? moment.utc(state.lastExport).format('YYYY-MM-DD HH:mm:ss.SSSSSS ZZ') : null
+        realm         : REALM,
+        entity        : ENTITY,
+        clientId      : CLIENT_ID,
+        clientSecret  : CLIENT_SECRET,
+        minLastUpdated: state.lastExport && state.lastExport.start ? moment.utc(state.lastExport.start).format('YYYY-MM-DD HH:mm:ss.SSSSSS ZZ') : null
     });
 
     if (profilesCountToBeFetched === 0) {
@@ -54,15 +58,15 @@ async function run() {
     console.log(`fetching ${profilesCountToBeFetched} entities`);
 
     const params = {
-        realm:        REALM,
-        entity:       ENTITY,
-        pageSize:     PAGE_SIZE,
-        clientId:     CLIENT_ID,
+        realm       : REALM,
+        entity      : ENTITY,
+        pageSize    : PAGE_SIZE,
+        clientId    : CLIENT_ID,
         clientSecret: CLIENT_SECRET
     };
 
-    if (state.lastExport) {
-        params.minLastUpdated = moment.utc(state.lastExport).format('YYYY-MM-DD HH:mm:ss.SSSSSS ZZ');
+    if (deltaExport) {
+        params.minLastUpdated = moment.utc(state.lastExport.start).format('YYYY-MM-DD HH:mm:ss.SSSSSS ZZ');
     }
 
     const start = new Date();
@@ -71,7 +75,7 @@ async function run() {
         chunksCounter     = 0,
         rowsCounter       = 0;
 
-    const outputFile     = `data/entities-${REALM}-${ENTITY}-${new Date().toISOString()}.json.gz`,
+    const outputFile     = `data/entities-${REALM}-${ENTITY}-${deltaExport ? 'delta' : 'full'}-${new Date().toISOString().replace(/:/g, '')}.json.gz`,
           tempOutputFile = `${outputFile}.part`;
 
     const resultsFileStream = fs.createWriteStream(tempOutputFile),
@@ -79,7 +83,13 @@ async function run() {
 
     gzipStream.pipe(resultsFileStream);
 
-    gzipStream.write(JSON.stringify({type: 'header', exportStart: new Date()}) + '\n');
+    gzipStream.write(JSON.stringify({
+        type       : 'header',
+        exportStart: start,
+        realm      : REALM,
+        entity     : ENTITY,
+        exportType : deltaExport ? 'delta' : 'full'
+    }) + '\n');
 
     await async.doUntil(async () => {
             params.minId = prevLastIdInChunk;
@@ -116,10 +126,16 @@ async function run() {
 
     gzipStream.end();
 
-    await saveState({lastExport: new Date().toISOString()});
+    await saveState({
+        lastExport: {
+            start: start.toISOString(),
+            end  : new Date().toISOString()
+        }
+    });
 
     if (rowsCounter === 0) {
         console.log('no entities fetched, removing empty file');
+        await fs.promises.unlink(tempOutputFile);
     } else {
         console.log(`${rowsCounter} entities fetched`);
         await fs.promises.rename(tempOutputFile, outputFile);

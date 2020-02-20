@@ -5,62 +5,46 @@ if (State exists?) then (no)
 
 else (yes)
   :load state;
-  :lastExportTime = state.lastExportTime;
 endif
 
-:set filtering
-(realm, entity_name, lastModified if lastExportTime exist);
-note right
-    This filtering settings are going to be used for checking number of records
-    to be fetched (/entity.count) and for fetching records chunks (/entity.find) in a loop
-end note
+:Set filtering
+(realm, entity_name);
 
+if(state <> null) then (no)
+else (yes)
+    :Add to filtering conditions: "lastModified == state.lastExportTime";
+endif
 
-:get number of records with filtering;
-note right
-    /entity.count
-end note
+:get number of records with filtering conditions from /entity.find;
 
 if (number of records > 0 ) then (yes)
     :create temporary file;
 
     :lastId = 0;
-
-    :save header row to the temporary file;
     note right
-        it should include export start time
+        it will store the biggest id fetched within loop
     end note
 
+    :save header row to the temporary file;
+
     repeat
-        :set id>=lastId in the filtering;
-        note right
-            as a part of the filtering already set
-        end note
-        :fetch chunk of records with filtering, sorted on id incrementally;
-        note right
-            /entity.find
-        end note
+        :Add/replace "id>=lastId" to the filtering conditions;
+        :fetch chunk of records with filtering, sorted on id incrementally from /entity.find;
 
         :append records to the temporary file;
         :set lastId to id field value of the last record in the chunk;
         note right
-            this is why chunk records have to be sorted
+            this is why chunk records need to be sorted
         end note
     repeat while (number of records fetched is less than page size) is (no)
     -> yes;
 
     :save footer row to the temporary file;
-    note right
-            it should include export end time
-    end note
 
     :rename temporary file to destination file name;
 
-    note right
-        file name should include realm, entity_name and filestamp.
-    end note
 else (no)
 endif
-:save start execution time to the state;
+:save start and end of execution time to the state;
 stop
 @enduml
