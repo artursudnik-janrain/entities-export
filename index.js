@@ -83,13 +83,7 @@ async function run() {
 
     gzipStream.pipe(resultsFileStream);
 
-    gzipStream.write(JSON.stringify({
-        type       : 'header',
-        exportStart: start,
-        realm      : REALM,
-        entity     : ENTITY,
-        exportType : deltaExport ? 'delta' : 'full'
-    }) + '\n');
+    gzipStream.write('[\n');
 
     await async.doUntil(async () => {
             params.minId = prevLastIdInChunk;
@@ -110,10 +104,11 @@ async function run() {
                 console.log(`fetched chunk with no entities in ${(new Date() - chunkStartTime) / 1000}s, ${rowsCounter} entities so far, no more entities to fetch`);
             }
 
-            records = records.map(record => ({type: 'data', data: record}));
-
             if (records.length > 0) {
-                gzipStream.write(records.map(record => JSON.stringify(record)).join('\n') + '\n');
+                gzipStream.write(records.map(record => {
+                    let recordSerialized = JSON.stringify(record);
+                    return `\t${recordSerialized},`
+                }).join('\n') + '\n');
             }
 
             prevLastIdInChunk = lastIdInChunk;
@@ -122,7 +117,7 @@ async function run() {
         }, async (stop) => stop
     );
 
-    gzipStream.write(JSON.stringify({type: 'footer', exportEnd: new Date()}));
+    gzipStream.write(']\n');
 
     gzipStream.end();
 
