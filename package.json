@@ -6,6 +6,6 @@
     "axios": "0.20.0",
     "dotenv-defaults": "2.0.1",
     "mkdirp": "1.0.4",
-    "moment": "2.29.0"
+    "moment": "2.29.2"
   }
 }
