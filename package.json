@@ -2,7 +2,7 @@
   "name": "entities-export",
   "version": "0.2.3",
   "dependencies": {
-    "async": "3.2.0",
+    "async": "3.2.2",
     "axios": "0.20.0",
     "dotenv-defaults": "2.0.1",
     "mkdirp": "1.0.4",
